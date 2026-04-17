@@ -13,3 +13,6 @@ data/
 *.pt
 *.pth
 *.log
+
+# MediaPipe models
+*.task

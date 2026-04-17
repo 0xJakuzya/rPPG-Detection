@@ -49,16 +49,3 @@ class VideoCapture:
     def stop(self):
         self.running = False
         self.cam.release()
-        
-if __name__ == '__main__':
-    cap = VideoCapture()
-    cap.start()
-    while True:
-        frame = cap.read()
-        if frame is None:
-            continue
-        cv2.imshow(config.WINDOW_NAME, frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-    cap.stop()
-    cv2.destroyAllWindows()
