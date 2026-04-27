@@ -1,3 +1,8 @@
+![Python](https://img.shields.io/badge/-Python-3776AB?logo=python&logoColor=white)
+![OpenCV](https://img.shields.io/badge/-OpenCV-5C3EE8?logo=opencv&logoColor=white)
+![NumPy](https://img.shields.io/badge/-NumPy-013243?logo=numpy&logoColor=white)
+![SciPy](https://img.shields.io/badge/-SciPy-8CAAE6?logo=scipy&logoColor=white)
+![MediaPipe](https://img.shields.io/badge/-MediaPipe-FF6F00?logo=google&logoColor=white)
 # rPPG-Detection
 
 Real-time remote photoplethysmography (rPPG) — heart rate measurement from a regular webcam by analyzing subtle color changes in facial skin caused by blood flow, without any contact sensors.
