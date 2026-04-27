@@ -1,15 +1,18 @@
 import threading
 from queue import Queue, Empty
-
 import cv2
-import numpy as np
 
-import config
-
+try:
+    from . import config
+except ImportError:
+    import config  # type: ignore
 
 class VideoCapture:
     def __init__(self):
         self.cam = cv2.VideoCapture(config.CAMERA_INDEX)
+        self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, config.FRAME_WIDTH)
+        self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, config.FRAME_HEIGHT)
+        self.cam.set(cv2.CAP_PROP_FPS, config.FPS_TARGET)
         self.fps = config.FPS_TARGET
         self.running = False
         self.frame_queue = Queue(maxsize=3)
@@ -17,10 +20,10 @@ class VideoCapture:
 
     def start(self):
         self.running = True
-        self.thread = threading.Thread(target=self.capture_loop, daemon=True)
+        self.thread = threading.Thread(target=self.capture, daemon=True)
         self.thread.start()
 
-    def capture_loop(self):
+    def capture(self):
         while self.running:
             ret, frame = self.cam.read()
             if not ret:
