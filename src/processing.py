@@ -1,6 +1,5 @@
 import scipy.signal
 import scipy.sparse
-import scipy.sparse.linalg
 import numpy as np
 import cv2
 from src import config
@@ -12,30 +11,34 @@ def extract_mean_rgb(frame: np.ndarray, roi: np.ndarray) -> np.ndarray | None:
         return None
     return pixels.mean(axis=0)
 
-def detrend(sig: np.ndarray) -> np.ndarray:
-    """Remove slow baseline drift"""
+
+def detrend(sig: np.ndarray, lam: float = config.DETREND_LAMBDA) -> np.ndarray:
     n = len(sig)
-    I = scipy.sparse.eye(n, format="csc")
+    H = np.eye(n)
     ones = np.ones(n)
     D = scipy.sparse.spdiags(
-        np.array([ones, -2 * ones, ones]),
-        [0, 1, 2],
-        n - 2, n,
-    ).tocsc()
-    detrended = (I - scipy.sparse.linalg.inv(I + config.DETREND_LAMBDA ** 2 * D.T @ D)) @ sig
-    return np.asarray(detrended).ravel().astype(np.float32)
+        np.array([ones, -2 * ones, ones]), [0, 1, 2], n - 2, n
+    ).toarray()
+    return (H - np.linalg.inv(H + lam ** 2 * D.T @ D)) @ sig.astype(np.float64)
 
-def chebyshev_bandpass(sig: np.ndarray, fps: float) -> np.ndarray:
-    """Chebyshev Type II bandpass filter"""
+
+def bandpass_filter(sig: np.ndarray, fps: float, lo: float, hi: float) -> np.ndarray:
     nyq = fps / 2.0
-    b, a = scipy.signal.cheby2(config.CHEBY_ORDER, config.CHEBY_RS, [config.CHEBY_LO / nyq, config.CHEBY_HI / nyq], btype="bandpass",)
-    return scipy.signal.filtfilt(b, a, sig.astype(np.float64)).astype(np.float32)
+    sig64 = sig.astype(np.float64)
+    if config.FILTER_TYPE == "chebyshev2":
+        b, a = scipy.signal.cheby2(
+            config.CHEBY_ORDER, config.CHEBY_RS, [lo / nyq, hi / nyq], btype="bandpass"
+        )
+    else:
+        b, a = scipy.signal.butter(1, [lo / nyq, hi / nyq], btype="bandpass")
+    return scipy.signal.filtfilt(b, a, sig64).astype(np.float32)
+
 
 def process_bvp(rgb_buf: np.ndarray, fps: float) -> np.ndarray:
     sig = rgb_buf[:, 1].astype(np.float64)
     sig = detrend(sig)
     if len(sig) >= int(fps * 2):
-        sig = chebyshev_bandpass(sig, fps)
+        sig = bandpass_filter(sig, fps, config.CHEBY_LO, config.CHEBY_HI)
     sig -= sig.mean()
     std = sig.std()
     if std > 1e-6:

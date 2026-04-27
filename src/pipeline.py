@@ -5,13 +5,15 @@ from src import config
 from src.face_detector import FaceDetector
 from src.video_capture import VideoCapture
 from src.visualization import bvp_plot, draw_roi, roi_to_mask
-from src.processing import extract_mean_rgb, estimate_hr, process_bvp
+from src.processing import extract_mean_rgb, estimate_hr
+from src.utils import make_algorithm
 
 def run_pipeline():
     cap = VideoCapture()
     cap.start()
     detector = FaceDetector()
     fps = float(config.FPS_TARGET)
+    algo = make_algorithm(fps)
     rgb_buf = deque(maxlen=int(config.BUFFER_SEC * fps))
     bvp_signal = np.array([], dtype=np.float32)
     hr = None
@@ -38,7 +40,7 @@ def run_pipeline():
                 rgb_buf.append([rgb_val[2], rgb_val[1], rgb_val[0]])
 
             if len(rgb_buf) >= int(fps * 2):
-                bvp_signal = process_bvp(np.array(rgb_buf, dtype=np.float32), fps)
+                bvp_signal = algo.run(np.array(rgb_buf, dtype=np.float32))
                 hr = estimate_hr(bvp_signal, fps)
             else:
                 hr = None
