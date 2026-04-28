@@ -1,5 +1,5 @@
 from .pos import POS
 from .chrom import CHROM
-from .physnet import PhysNet
+from .baseline import PatchCNN
 
-__all__ = ["POS", "CHROM", "PhysNet"]
+__all__ = ["POS", "CHROM", "PatchCNN"]

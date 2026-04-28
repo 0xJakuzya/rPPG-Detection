@@ -1,7 +1,4 @@
-from src.pipeline import run_pipeline
-
-def main():
-    run_pipeline()
+from src.train import run
 
 if __name__ == "__main__":
-    main()
+    run()

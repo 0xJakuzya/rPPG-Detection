@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from src.processing import detrend, bandpass_filter
+from src.utils import detrend, bandpass_filter
 from src import config
 
 def pos(rgb, fs):

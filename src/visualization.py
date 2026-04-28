@@ -1,11 +1,6 @@
 import cv2
 import numpy as np
-
-try:
-    from . import config
-except ImportError:
-    import config  # type: ignore
-
+from src import config
 
 def draw_roi(frame: np.ndarray, roi_mask: np.ndarray, color: tuple[int, int, int], alpha: float = 0.3,) -> np.ndarray:
     overlay = frame.copy()
@@ -43,3 +38,22 @@ def bvp_plot(bvp: np.ndarray, w: int, h: int, hr: float) -> np.ndarray:
 
 def roi_to_mask(roi: np.ndarray) -> np.ndarray:
     return cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+
+
+def draw_status(
+    frame: np.ndarray,
+    hr: float | None,
+    status: str,
+    color: tuple[int, int, int],
+) -> np.ndarray:
+    label = f"{status}  |  HR: {hr:.0f} BPM" if hr is not None else f"{status}  |  HR: --"
+    cv2.putText(
+        frame,
+        label,
+        (12, 24),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        config.FONT_SCALE,
+        color,
+        config.FONT_THICKNESS,
+    )
+    return frame
