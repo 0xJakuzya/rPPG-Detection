@@ -3,72 +3,50 @@
 ![NumPy](https://img.shields.io/badge/-NumPy-013243?logo=numpy&logoColor=white)
 ![SciPy](https://img.shields.io/badge/-SciPy-8CAAE6?logo=scipy&logoColor=white)
 ![MediaPipe](https://img.shields.io/badge/-MediaPipe-FF6F00?logo=google&logoColor=white)
+
 # rPPG-Detection
 
-Real-time remote photoplethysmography (rPPG) — heart rate measurement from a regular webcam by analyzing subtle color changes in facial skin caused by blood flow, without any contact sensors.
+This project is about remote photoplethysmography (rPPG).  
+It means heart rate estimation from a normal camera.  
+The system looks at small color changes on the face skin.
+
+Now the project has two parts:
+
+- classical baseline methods: `POS` and `CHROM`
+- a simple neural network on face patches: `CNN`
 
 ![Demo](assets/me.png)
 
-## Stack
+## What The Project Does
 
-| Component | Technology |
-|-----------|------------|
-| Face detection | [MediaPipe FaceLandmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker) |
-| Video capture | OpenCV |
-| Signal processing | NumPy, SciPy (sparse, FFT) |
-| Filtering | Detrend + Chebyshev Type II |
-| rPPG algorithms | CHROM (De Haan, 2013) & POS (Wang, 2017) |
+The project uses `MediaPipe Face Landmarker` to find the face.
+After that it takes small skin patches from the forehead and cheeks.
+These patches are used for:
 
-## How it works
- 
-### 1. Face Detection
-MediaPipe FaceLandmarker detects 478 facial landmarks per frame
+- classical signal methods
+- preprocessing for training
+- a patch-based CNN model
 
-### 2. ROI Extraction
-Three regions of interest are masked:
-- Forehead
-- Left cheek  
-- Right cheek
+## Project Structure
 
-### 3. Signal Extraction
-Mean RGB values are averaged across all three ROIs and buffered over a **10-second sliding window**
-
-### 4. Signal Processing
-| Step | Method |
-|------|--------|
-| Detrending | Sparse matrix method  |
-| Bandpass filter | Chebyshev Type II (40–180 BPM) |
-| HR estimation | FFT peak detection |
-
-## Project structure
-
-```
+```text
 rPPG-Detection/
-├── main.py                  # Entry point
-├── src/
-│   ├── pipeline.py          # Main real-time loop
-│   ├── face_detector.py     # MediaPipe wrapper + ROI masking
-│   ├── video_capture.py     # Threaded camera capture
-│   ├── processing.py        # Detrend, Chebyshev bandpass, HR estimation
-│   ├── visualization.py     # BVP plot, ROI overlay
-│   └── config.py            # All parameters (camera, filters, ROI indices)
+├── main.py
 ├── models/
-│   ├── pos.py               # POS algorithm 
-│   └── chrom.py             # CHROM algorithm 
+│   ├── baseline.py
+│   ├── chrom.py
+│   ├── loss.py
+│   └── pos.py
+├── src/
+│   ├── config.py
+│   ├── dataset.py
+│   ├── face_detector.py
+│   ├── preprocessing.py
+│   ├── test.py
+│   ├── train.py
+│   ├── utils.py
+│   ├── video.py
+│   └── visualization.py
 └── assets/
     └── me.png
 ```
-
-## Quick start
-
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/rPPG-Detection.git
-cd rPPG-Detection
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the application
-python main.py
