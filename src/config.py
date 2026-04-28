@@ -1,8 +1,8 @@
-# ── Algorithm
+# Algorithm
 RPPG_METHOD: str = "POS"
 FILTER_TYPE: str = "chebyshev2"
 
-# ── Camera 
+# Camera 
 CAMERA_INDEX: int = 0         
 FRAME_WIDTH: int = 640
 FRAME_HEIGHT: int = 480
@@ -17,19 +17,19 @@ FONT_SCALE: float = 0.55
 FONT_COLOR: tuple[int, int, int] = (180, 180, 180)
 FONT_THICKNESS: int = 1
 
-#  Signal buffer
+#  ignal buffer
 BUFFER_SEC: int = 10
 
-#  Detrend filter 
+# Detrend filter 
 DETREND_LAMBDA: float = 100.0 
 
-# ── Chebyshev Type II bandpass
+# Chebyshev Type II bandpass
 CHEBY_LO: float = 0.7
 CHEBY_HI: float = 2.5
 CHEBY_ORDER: int = 2
 CHEBY_RS: float = 40.0
 
-# ── HR estimation
+# HR estimation
 HR_LO_HZ: float = 0.75
 HR_HI_HZ: float = 2.5
 
@@ -39,7 +39,17 @@ FACE_MAX_NUM: int = 1
 FACE_MIN_DETECTION_CONFIDENCE: float = 0.5
 FACE_MIN_TRACKING_CONFIDENCE: float = 0.5
 
-# ── ROI landmark indices 
+#  ROI landmark  
 LEFT_CHEEK_IDX: list[int] = [50, 101, 118, 117, 116, 123, 147, 213, 192, 214]
 RIGHT_CHEEK_IDX: list[int] = [280, 330, 347, 346, 345, 352, 376, 433, 416, 434]
 FOREHEAD_IDX: list[int] = [109, 67, 103, 54, 21, 162, 127, 10, 356, 389, 251, 284, 332, 297, 338]
+
+# PhysNet 
+PHYSNET_BASE_CHANNELS: int = 32  
+PHYSNET_WINDOW: int = 300        
+PHYSNET_EPOCHS: int = 50
+PHYSNET_BATCH_SIZE: int = 16
+PHYSNET_LR: float = 1e-3
+PHYSNET_PPG_LO: float = 0.5       #
+PHYSNET_PPG_HI: float = 3.5
+PHYSNET_MODEL_PATH: str = "physnet.pth"
