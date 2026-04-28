@@ -6,9 +6,7 @@
 
 # rPPG-Detection
 
-This project is about remote photoplethysmography (rPPG).  
-It means heart rate estimation from a normal camera.  
-The system looks at small color changes on the face skin.
+This project is about remote photoplethysmography (rPPG).  It means heart rate estimation from a normal camera.  The system looks at small color changes on the face skin.
 
 Now the project has two parts:
 
@@ -19,9 +17,7 @@ Now the project has two parts:
 
 ## What The Project Does
 
-The project uses `MediaPipe Face Landmarker` to find the face.
-After that it takes small skin patches from the forehead and cheeks.
-These patches are used for:
+The project uses `MediaPipe Face Landmarker` to find the face. After that it takes small skin patches from the forehead and cheeks. These patches are used for:
 
 - classical signal methods
 - preprocessing for training
