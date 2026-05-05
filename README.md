@@ -1,4 +1,4 @@
-# rPPG Heart Rate Estimation
+# rPPG Heart Rate Measurement
 
 This project estimates heart rate from a face video without contact sensors.
 It uses remote photoplethysmography (rPPG): a camera records small skin color
