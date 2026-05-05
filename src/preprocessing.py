@@ -173,6 +173,15 @@ def filter_target_ppg(ppg: np.ndarray, fps: float) -> np.ndarray:
         filtered = bandpass_filter(filtered, fps, config.CHEBY_LO, config.CHEBY_HI)
     return normalize_signal(filtered)
 
+
+def patient_id_allowed(patient_id: str, min_patient_id: int | None) -> bool:
+    if min_patient_id is None:
+        return True
+    try:
+        return int(patient_id) >= min_patient_id
+    except ValueError:
+        return False
+
 def main() -> None:
     args = parse_args()
     dataset_root = Path(args.dataset_root)
@@ -188,6 +197,7 @@ def main() -> None:
     total_windows = 0
     skipped = 0
     warned = 0
+    filtered = 0
 
     try:
         for row in iter_rows(dataset_root, args.camera, args.step):
@@ -196,6 +206,10 @@ def main() -> None:
 
             stem = Path(row["video"]).stem
             patient_id = stem.split("_", 1)[0]
+            if not patient_id_allowed(patient_id, args.min_patient_id):
+                filtered += 1
+                continue
+
             patient_dir = output_dir / patient_id
             patches, missing, decoded_frames, reported_frames = extract_patch_sequence(
                 dataset_root / row["video"],
@@ -357,6 +371,7 @@ def main() -> None:
 
     print(f"processed videos: {processed}")
     print(f"skipped videos: {skipped}")
+    print(f"filtered videos: {filtered}")
     print(f"warned videos: {warned}")
     print(f"saved windows: {total_windows}")
     print(f"output dir: {output_dir}")
@@ -373,6 +388,8 @@ def parse_args(args=None) -> argparse.Namespace:
     parser.add_argument("--frame-step", type=int, default=1)
     parser.add_argument("--video-fps", type=float, default=30.0)
     parser.add_argument("--max-videos", type=int, default=None)
+    parser.add_argument("--min-patient-id", type=int, default=None,
+                        help="Process only videos with numeric patient ID >= this value.")
     parser.add_argument("--max-missing", type=float, default=0.2)
     parser.add_argument("--min-coverage", type=float, default=0.95)
     parser.add_argument("--min-windows", type=int, default=1)

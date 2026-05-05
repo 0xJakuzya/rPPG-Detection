@@ -1,29 +1,95 @@
 # rPPG Heart Rate Estimation
 
-This project uses remote photoplethysmography (rPPG) to estimate heart rate from
-face video without physical contact.
+This project estimates heart rate from a face video without contact sensors.
+It uses remote photoplethysmography (rPPG): a camera records small skin color
+changes caused by blood flow, and the model converts them into a pulse signal.
 
-Instead of body sensors, it uses a normal camera. The camera records small skin
-color changes caused by blood flow. These changes are converted into a
-one-dimensional physiological signal, and heart rate is estimated from it.
+The best current model is `PhysNet` trained with `ShiftLoss`, frame-difference
+normalization, and a subject-level train/validation split.
 
-## PhysNet Architecture
+## What The Project Does
+
+- Finds face landmarks with MediaPipe.
+- Extracts several face ROI patches from each frame.
+- Builds `.npz` training windows from video and PPG signal.
+- Trains `PhysNet` and baseline CNN models.
+- Estimates heart rate in BPM from the predicted rPPG/BVP signal.
+- Reports MAE, RMSE, scatter plots, and per-patient errors.
+- Can run real-time heart-rate inference from a webcam.
+
+## Model
 
 ![PhysNet architecture](assets/physnet_architecture.png)
 
-Fig. 1. PhysNet architecture with ROI patches.
+PhysNet receives a sequence of face ROI patches and predicts a one-dimensional
+physiological signal. Heart rate is then estimated from the strongest frequency
+peak in the valid heart-rate range.
 
-## Features
+## Main Results
 
-- Extracts multi-ROI face patches with MediaPipe.
-- Prepares `.npz` windows for training.
-- Uses subject-level train/validation split.
-- Trains `baseline` CNN and `physnet` models.
-- Supports `negpearson` and `cnn` loss functions.
-- Evaluates HR with MAE, RMSE, scatter plot, and Bland-Altman plot.
-- Runs realtime POS/CHROM baseline with a webcam.
+| Dataset | Patients | Windows | MAE, BPM | RMSE, BPM | Purpose |
+|---|---:|---:|---:|---:|---|
+| Holdout validation | 20 | 641 | 4.19 | 6.45 | Validation on unseen train-split patients |
+| New patients test | 28 | 896 | 5.20 | 7.12 | Test on fully new patients |
 
-## Installation
+The error grows by `+1.01 BPM` on new patients. This is expected: the model sees
+people that were not used during training. The result is still close to the
+validation quality.
+
+![Model generalization summary](assets/readme/generalization_summary.png)
+
+## Training Result
+
+Best training setup:
+
+| Parameter | Value |
+|---|---:|
+| Model | `PhysNet` |
+| Loss | `shiftloss` |
+| FPS | 15 |
+| Window size | 300 frames / 20 seconds |
+| Train windows | 2563 |
+| Validation windows | 641 |
+| Train patients | 80 |
+| Validation patients | 20 |
+| Model parameters | 709649 |
+| Best validation MAE | 4.19 BPM |
+
+![Training validation curves](assets/readme/training_validation_curves.png)
+
+## Test On New Patients
+
+The external test set has 28 new patients and 896 windows.
+
+| Metric | Value |
+|---|---:|
+| MAE | 5.20 BPM |
+| RMSE | 7.12 BPM |
+| Median absolute error | 3.00 BPM |
+| Std absolute error | 4.86 BPM |
+| Max absolute error | 27.00 BPM |
+| Mean bias, predicted - true | +1.92 BPM |
+
+Most predictions are close to the reference heart rate, but some patients have
+larger errors. This means the model is useful for a research prototype, but it
+still needs more validation before medical use.
+
+![New patients HR scatter](assets/readme/new_patients_hr_scatter.png)
+
+![New patients error distribution](assets/readme/new_patients_error_distribution.png)
+
+## Per-Patient Analysis
+
+The model quality is different for different people.
+
+- Best patient: `3000`, `MAE = 1.22 BPM`.
+- Hardest patient: `2732`, `MAE = 9.09 BPM`.
+
+![New patients MAE by patient](assets/readme/new_patients_mae_by_patient.png)
+
+## How To Run
+
+Install dependencies:
 
 ```bash
 python -m venv .venv
@@ -31,29 +97,27 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-## Structure
+Train the best configuration:
 
-```text
-rPPG-Detection/
-  assets/
-  data/
-  models/
-    baseline.py
-    chrom.py
-    loss.py
-    physnet.py
-    pos.py
-  src/
-    config.py
-    dataset.py
-    face_detector.py
-    preprocessing.py
-    test.py
-    train.py
-    utils.py
-    video.py
-    visualization.py
-  main.py
-  requirements.txt
-  README.md
+```bash
+python main.py --data-dir data/mcd_rppg_windows_fs2_200v_filt --output results --epochs 15 --batch-size 4 --lr 0.0003 --num-workers 4 --model physnet --loss shiftloss --use-frame-diff --early-stopping-patience 3 --early-stopping-min-delta 0.02
 ```
+
+Run real-time inference:
+
+```bash
+python -m src.test --model-path results/best/cnn.pth
+```
+
+Run the test on new patients:
+
+```bash
+python test_new_patients.py
+```
+
+## Notes
+
+- The current results are for research and engineering evaluation.
+- The model is not medically validated.
+- Large errors can happen on difficult videos or difficult patients.
+- More data and external validation are needed before real-world use.
